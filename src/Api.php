@@ -141,12 +141,30 @@ class Api
 	}
 
 
+	private function getCurlFile($filePath)
+	{
+		$file = realpath($filePath);
+		if (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 5)
+		{
+			$file = new \CurlFile($file);
+		}
+		else
+		{
+			$file = '@'.$file;
+		}
+
+		return $file;
+	}
+
+
 	private function curl($url, $method = 'GET', $params = array())
 	{
 		$this->onCurlCall(func_get_args());
 
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $this->apiUrl . '/' . $url);
+		$header = array();
+		$header[] = 'XDEBUG_SESSION: 1';
 		if (!empty($this->token))
 		{
 			$header[] = 'Token: ' . $this->token;
@@ -219,22 +237,29 @@ class Api
 	}
 
 
-	public function upload($directory, $fileName, $filePath)
+	public function uploadArchive($directory, $file)
 	{
-		$file = realpath($filePath);
-		if (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 5)
+		$result = $this->callApi(
+			'file/upload-archive',
+			'POST',
+			array('directory' => $directory, 'content' => $this->getCurlFile($file))
+		);
+
+		if ($result['status'] != 'success')
 		{
-			$file = new \CurlFile($file);
-		}
-		else
-		{
-			$file = '@'.$file;
+			$this->throwGenericResponseError($result);
 		}
 
+		return $result;
+	}
+
+
+	public function upload($directory, $fileName, $file)
+	{
 		$result = $this->callApi(
 			'file/upload',
 			'POST',
-			array('directory' => $directory, 'file' => $fileName, 'content' => $file)
+			array('directory' => $directory, 'file' => $fileName, 'content' => $this->getCurlFile($file))
 		);
 
 		if ($result['status'] != 'success')
