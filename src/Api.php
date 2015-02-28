@@ -58,6 +58,23 @@ class Api
 	 */
 	private $password;
 
+	/**
+	 * Token
+	 *
+	 * @var string $token Authorization API token
+	 */
+	private $token;
+
+	private $browserAgent = 'IdnClient/1.0 (PHP)';
+
+	private $debug = FALSE;
+
+	public $onCurlCall = array();
+
+	public $onCurlFinished = array();
+
+	public $onCurlFailed = array();
+
 
 	/**
 	 * Prepare the client API
@@ -65,10 +82,33 @@ class Api
 	 * @param string $client Client UID
 	 * @param string $password Password
 	 */
-	public function __construct($client, $password)
+	public function __construct($username, $password, $client)
 	{
-		$this->client = $client;
+		$this->username = $username;
 		$this->password = $password;
+		$this->client = $client;
+	}
+
+
+	public function __call($name, $args)
+	{
+		if (strpos($name, 'on') === 0)
+		{
+			if (is_array($this->$name) || $_this->$name instanceof \Traversable)
+			{
+				foreach ($this->$name as $handler)
+				{
+					call_user_func_array($handler, $args);
+				}
+				return;
+			}
+			elseif ($this->$name !== NULL)
+			{
+				throw new \InvalidArgumentException("Property $class::$$name must be array or NULL, " . gettype($_this->$name) ." given.");
+			}
+		}
+
+		throw new \BadMethodCallException("Call to undefined method $name().");
 	}
 
 
@@ -84,63 +124,193 @@ class Api
 	}
 
 
-	private function curl($post)
+	public function enableDebug($bool)
 	{
-		$postData = array(
-			'client' => $this->client,
-			'password' => $this->password,
-		);
+		$this->debug = (bool) $bool;
+	}
+
+
+	private function throwGenericResponseError($response)
+	{
+		if (!empty($result['error']))
+		{
+			throw new OperationFailException($result['error']);
+		}
+
+		throw new OperationFailException('Unknown error');
+	}
+
+
+	private function curl($url, $method = 'GET', $params = array())
+	{
+		$this->onCurlCall(func_get_args());
 
 		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $this->apiUrl);
+		curl_setopt($ch, CURLOPT_URL, $this->apiUrl . '/' . $url);
+		if (!empty($this->token))
+		{
+			$header[] = 'Token: ' . $this->token;
+		}
 		curl_setopt($ch, CURLOPT_POST, 1);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $post + $postData);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_USERAGENT, $this->browserAgent);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+
 		$result = curl_exec($ch);
 		curl_close ($ch);
 
-		return json_decode($result);
+		$json = json_decode($result, TRUE);
+
+		$this->onCurlFinished($json);
+
+		if (!is_array($json) || empty($json))
+		{
+			$this->onCurlFailed($result);
+			throw new InvalidResponseException('Received invalid response from server.');
+		}
+
+		return $json;
 	}
 
 
-	public function uploadUrl($path, $fileName, $fileUrl)
+	protected function callApi($url, $method = 'GET', $params = array())
 	{
-		$content = file_get_contents($fileUrl);
+		if (is_null($this->token))
+		{
+			$this->authenticate();
+		}
+
+		return $this->curl($url, $method, $params);
+	}
+
+
+	private function authenticate()
+	{
+		$result = $this->curl(
+			'auth/login',
+			'POST',
+			array('username' => $this->username, 'password' => $this->password, 'client' => $this->client)
+		);
+
+		if ($result['status'] != 'connected')
+		{
+			throw new OperationFailException('Wrong username, password or client.', 403);
+		}
+
+		$this->token = $result['token'];
+	}
+
+
+	public function uploadUrl($directory, $fileName, $fileUrl)
+	{
+		$result = $this->callApi(
+			'file/upload-url',
+			'POST',
+			array('directory' => $directory, 'file' => $fileName, 'url' => $fileUrl)
+		);
+
+		if ($result['status'] != 'success')
+		{
+			$this->throwGenericResponseError($result);
+		}
+
+		return $result;
+	}
+
+
+	public function upload($directory, $fileName, $filePath)
+	{
 		$file = realpath($filePath);
-		$post = array(
-			'action' => 'upload',
-			'path' => $path,
-			'filename' => $fileName,
-			'content' => $content,
+		if (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 5)
+		{
+			$file = new \CurlFile($file);
+		}
+		else
+		{
+			$file = '@'.$file;
+		}
+
+		$result = $this->callApi(
+			'file/upload',
+			'POST',
+			array('directory' => $directory, 'file' => $fileName, 'content' => $file)
 		);
 
-		return $this->curl($post);
+		if ($result['status'] != 'success')
+		{
+			$this->throwGenericResponseError($result);
+		}
+
+		return $result;
 	}
 
 
-	public function upload($path, $fileName, $filePath)
+	public function delete($directory, $fileName)
 	{
-		$file = realpath($filePath);
-		$post = array(
-			'action' => 'upload',
-			'path' => $path,
-			'filename' => $fileName,
-			'content' => '@'.$file,
+		$result = $this->callApi(
+			'file/delete',
+			'DELETE',
+			array('directory' => $directory, 'file' => $fileName)
 		);
 
-		return $this->curl($post);
+		if ($result['status'] != 'success')
+		{
+			$this->throwGenericResponseError($result);
+		}
+
+		return $result;
 	}
 
 
-	public function delete($path, $fileName)
+	public function createDirectory($directory)
 	{
-		$post = array(
-			'action' => 'delete',
-			'path' => $path,
-			'filename' => $fileName,
+		$result = $this->callApi(
+			'directory/create',
+			'POST',
+			array('directory' => $directory)
 		);
 
-		return $this->curl($post);
+		if ($result['status'] != 'success')
+		{
+			$this->throwGenericResponseError($result);
+		}
+
+		return $result;
+	}
+
+
+	public function listDirectory($directory)
+	{
+		$result = $this->callApi(
+			'directory/list',
+			'POST',
+			array('directory' => $directory)
+		);
+
+		if ($result['status'] != 'success')
+		{
+			$this->throwGenericResponseError($result);
+		}
+
+		return $result;
+	}
+
+
+	public function directorySettings($directory, $settings = NULL)
+	{
+		$result = $this->callApi(
+			is_null($settings) ? 'directory/settings' : 'directory/set-settings',
+			'POST',
+			array('directory' => $directory, 'settings' => $settings)
+		);
+
+		if ($result['status'] != 'success')
+		{
+			$this->throwGenericResponseError($result);
+		}
+
+		return $result;
 	}
 
 
@@ -152,7 +322,7 @@ class Api
 			'filename' => $fileName,
 		);
 
-		return $this->curl($post);
+		return $this->callApi($post);
 	}
 
 
@@ -162,7 +332,7 @@ class Api
 			'action' => 'purge',
 		);
 
-		return $this->curl($post);
+		return $this->callApi($post);
 	}
 
 
@@ -173,3 +343,9 @@ class Api
 
 
 }
+
+class InvalidResponseException extends \Exception {}
+
+class OperationException extends \Exception {}
+
+class OperationFailException extends OperationException {}
