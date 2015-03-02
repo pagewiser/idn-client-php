@@ -127,6 +127,8 @@ class Api
 	{
 		$this->username = $username;
 		$this->password = $password;
+
+		$this->token = NULL;
 	}
 
 
@@ -214,6 +216,10 @@ class Api
 		{
 			$header[] = 'Token: ' . $this->token;
 		}
+		if (!empty($this->client))
+		{
+			$header[] = 'AuthClient: ' . $this->client;
+		}
 		curl_setopt($ch, CURLOPT_POST, 1);
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -243,11 +249,6 @@ class Api
 		if (is_null($this->token))
 		{
 			$this->authenticate();
-		}
-
-		if (!empty($this->client))
-		{
-			$params['client'] = $this->client;
 		}
 
 		return $this->curl($url, $method, $params);
