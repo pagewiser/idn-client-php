@@ -45,11 +45,25 @@ class Api
 	private $imgUrl = '';
 
 	/**
-	 * Client UID
+	 * Application ID
 	 *
-	 * @var string $client Client UID
+	 * @var string $appId Application ID
 	 */
-	private $client;
+	private $appId;
+
+	/**
+	 * Application secret phrase
+	 *
+	 * @var string $appSecret Application secret phrase
+	 */
+	private $appSecret;
+
+	/**
+	 * Username
+	 *
+	 * @var string $username Username
+	 */
+	private $username;
 
 	/**
 	 * Password
@@ -57,6 +71,13 @@ class Api
 	 * @var string $password Password
 	 */
 	private $password;
+
+	/**
+	 * Client UID
+	 *
+	 * @var string $client Client UID
+	 */
+	private $client;
 
 	/**
 	 * Token
@@ -83,13 +104,34 @@ class Api
 	/**
 	 * Prepare the client API
 	 *
+	 * @param string $appId Application ID
+	 * @param string $appSecret Application passowrd
+	 */
+	public function __construct($appId, $appSecret)
+	{
+		$this->appId = $appId;
+		$this->appSecret = $appSecret;
+	}
+
+
+	/**
+	 * Login as user
+	 *
+	 * @param string $username Username
 	 * @param string $client Client UID
 	 * @param string $password Password
+	 *
+	 * @return NULL
 	 */
-	public function __construct($username, $password, $client)
+	public function loginUser($username, $password)
 	{
 		$this->username = $username;
 		$this->password = $password;
+	}
+
+
+	public function loginClient($client)
+	{
 		$this->client = $client;
 	}
 
@@ -203,16 +245,24 @@ class Api
 			$this->authenticate();
 		}
 
+		if (!empty($this->client))
+		{
+			$params['client'] = $this->client;
+		}
+
 		return $this->curl($url, $method, $params);
 	}
 
 
 	private function authenticate()
 	{
+		$authData = array('appId' => $this->appId, 'appSecret' => $this->appSecret);
+		$authData['username'] = $this->username;
+		$authData['password'] = $this->password;
 		$result = $this->curl(
 			'auth/login',
 			'POST',
-			array('username' => $this->username, 'password' => $this->password, 'client' => $this->client)
+			$authData
 		);
 
 		if ($result['status'] != 'connected')
