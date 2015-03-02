@@ -275,6 +275,125 @@ class Api
 	}
 
 
+	public function createUser($username, $email, $password)
+	{
+		$result = $this->callApi(
+			'user/create',
+			'POST',
+			array('username' => $username, 'email' => $email, 'password' => $password)
+		);
+
+		if ($result['status'] != 'success')
+		{
+			$this->throwGenericResponseError($result);
+		}
+
+		return $result;
+	}
+
+
+	public function changeEmail($email)
+	{
+		$result = $this->callApi(
+			'user/change-email',
+			'POST',
+			array('email' => $email)
+		);
+
+		if ($result['status'] != 'success')
+		{
+			$this->throwGenericResponseError($result);
+		}
+
+		return $result;
+	}
+
+
+	public function changePassword($oldPassword, $newPassword)
+	{
+		$result = $this->callApi(
+			'user/change-password',
+			'POST',
+			array('oldPassword' => $oldPassword, 'newPassword' => $newPassword)
+		);
+
+		if ($result['status'] != 'success')
+		{
+			$this->throwGenericResponseError($result);
+		}
+
+		return $result;
+	}
+
+
+	public function assignUserClient($client)
+	{
+		$result = $this->callApi(
+			'user/assign-client',
+			'POST',
+			array('client' => $client)
+		);
+
+		if ($result['status'] != 'success')
+		{
+			$this->throwGenericResponseError($result);
+		}
+
+		return $result;
+	}
+
+
+	public function unassignUserClient($client)
+	{
+		$result = $this->callApi(
+			'user/unassign-client',
+			'POST',
+			array('client' => $client)
+		);
+
+		if ($result['status'] != 'success')
+		{
+			$this->throwGenericResponseError($result);
+		}
+
+		return $result;
+	}
+
+
+	public function assignedClients()
+	{
+		$result = $this->callApi(
+			'user/assigned-clients',
+			'POST',
+			array()
+		);
+
+		if ($result['status'] != 'success')
+		{
+			$this->throwGenericResponseError($result);
+		}
+
+		return $result;
+	}
+
+
+	public function createClient($client, $name)
+	{
+		$result = $this->callApi(
+			'client/create',
+			'POST',
+			array('client' => $client, 'name' => $name)
+		);
+
+		if ($result['status'] != 'success')
+		{
+			$this->throwGenericResponseError($result);
+		}
+
+		return $result;
+	}
+
+
 	public function uploadUrl($directory, $fileName, $fileUrl)
 	{
 		$result = $this->callApi(
