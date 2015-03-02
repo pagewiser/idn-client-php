@@ -75,6 +75,10 @@ class Api
 
 	public $onCurlFailed = array();
 
+	private $lastErrorCode;
+
+	private $maxUploadSize;
+
 
 	/**
 	 * Prepare the client API
@@ -164,7 +168,6 @@ class Api
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $this->apiUrl . '/' . $url);
 		$header = array();
-		$header[] = 'XDEBUG_SESSION: 1';
 		if (!empty($this->token))
 		{
 			$header[] = 'Token: ' . $this->token;
@@ -176,6 +179,7 @@ class Api
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
 
 		$result = curl_exec($ch);
+		$this->lastErrorCode = curl_errno($ch);
 		curl_close ($ch);
 
 		$json = json_decode($result, TRUE);
@@ -239,11 +243,30 @@ class Api
 
 	public function uploadArchive($directory, $file)
 	{
-		$result = $this->callApi(
-			'file/upload-archive',
-			'POST',
-			array('directory' => $directory, 'content' => $this->getCurlFile($file))
-		);
+		$max = $this->getMaxUploadSize();
+
+		if (filesize($file) > $max)
+		{
+			throw new EntityTooLargeException('File is too large', 413);
+		}
+
+		try
+		{
+			$result = $this->callApi(
+				'file/upload-archive',
+				'POST',
+				array('directory' => $directory, 'content' => $this->getCurlFile($file))
+			);
+		}
+		catch (InvalidResponseException $ex)
+		{
+			// Request entity too large
+			if ($this->lastErrorCode = 413)
+			{
+				throw new EntityTooLargeException('File is too large', 413);
+			}
+			throw $ex;
+		}
 
 		if ($result['status'] != 'success')
 		{
@@ -339,6 +362,29 @@ class Api
 	}
 
 
+	public function getMaxUploadSize()
+	{
+		if ($this->maxUploadSize)
+		{
+			return $this->maxUploadSize;
+		}
+
+		$result = $this->callApi(
+			'setup/max-upload-size',
+			'POST',
+			array()
+		);
+
+		if ($result['status'] != 'success')
+		{
+			$this->throwGenericResponseError($result);
+		}
+
+		$this->maxUploadSize = $result['max_file_size'];
+		return $result['max_file_size'];
+	}
+
+
 	public function clean($path, $fileName)
 	{
 		$post = array(
@@ -374,3 +420,5 @@ class InvalidResponseException extends \Exception {}
 class OperationException extends \Exception {}
 
 class OperationFailException extends OperationException {}
+
+class EntityTooLargeException extends OperationException {}
