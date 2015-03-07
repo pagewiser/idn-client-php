@@ -415,9 +415,14 @@ class Api
 	{
 		$max = $this->getMaxUploadSize();
 
+		if (!is_file($file))
+		{
+			throw new FileNotFoundException($file . ' is not valid file', 404);
+		}
+
 		if (filesize($file) > $max)
 		{
-			throw new EntityTooLargeException('File is too large', 413);
+			throw new FileTooLargeException('File is too large', 413);
 		}
 
 		try
@@ -433,7 +438,7 @@ class Api
 			// Request entity too large
 			if ($this->lastErrorCode = 413)
 			{
-				throw new EntityTooLargeException('File is too large', 413);
+				throw new FileTooLargeException('File is too large', 413);
 			}
 			throw $ex;
 		}
@@ -591,4 +596,8 @@ class OperationException extends \Exception {}
 
 class OperationFailException extends OperationException {}
 
-class EntityTooLargeException extends OperationException {}
+class FileException extends OperationException {}
+
+class FileNotFoundException extends FileException {}
+
+class FileTooLargeException extends FileException {}
