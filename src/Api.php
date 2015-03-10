@@ -192,6 +192,12 @@ class Api
 	private function getCurlFile($filePath)
 	{
 		$file = realpath($filePath);
+
+		if (empty($file))
+		{
+			throw new FileNotFoundException('File not found');
+		}
+
 		if (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 5)
 		{
 			$file = new \CurlFile($file);
@@ -394,6 +400,23 @@ class Api
 	}
 
 
+	public function getClientStatistics()
+	{
+		$result = $this->callApi(
+			'client/get-statistics',
+			'POST',
+			array()
+		);
+
+		if ($result['status'] != 'success')
+		{
+			$this->throwGenericResponseError($result);
+		}
+
+		return $result;
+	}
+
+
 	public function uploadUrl($directory, $fileName, $fileUrl)
 	{
 		$result = $this->callApi(
@@ -442,6 +465,23 @@ class Api
 			}
 			throw $ex;
 		}
+
+		if ($result['status'] != 'success')
+		{
+			$this->throwGenericResponseError($result);
+		}
+
+		return $result;
+	}
+
+
+	public function uploadUrlArchive($directory, $url)
+	{
+		$result = $this->callApi(
+			'file/upload-url-archive',
+			'POST',
+			array('directory' => $directory, 'url' => $url)
+		);
 
 		if ($result['status'] != 'success')
 		{
