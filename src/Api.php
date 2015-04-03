@@ -11,16 +11,6 @@ class Api
 	const FIT = '';
 
 	/**
-	 * @const Shrinks images
-	 */
-	const SHRINK_ONLY = 'c';
-
-	/**
-	 * @const Stretch image and ignore aspect ratio
-	 */
-	const STRETCH = 's';
-
-	/**
 	 * @const Fills given area, dimensions are greater than or equal to the required dimensions
 	 */
 	const FILL = 'f';
@@ -29,6 +19,26 @@ class Api
 	 * @const Fills given area exactly, crop the image
 	 */
 	const EXACT = 'e';
+
+	/**
+	 * @const Fills given area exactly, crop the image
+	 */
+	const CROP = 'c';
+
+	/**
+	 * @const Fit the image and pad to exact size
+	 */
+	const PAD = 8;
+
+	/**
+	 * @const Fit the image and pad to exact size
+	 */
+	const EXACT_BACKGROUND = 16;
+
+	/**
+	 * @const Zoom to the face on the image
+	 */
+	const FACE = 'a';
 
 	/**
 	 * IDN API url
