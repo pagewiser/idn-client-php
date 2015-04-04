@@ -136,6 +136,12 @@ class Api
 	}
 
 
+	protected function cleanPathString($path)
+	{
+		return trim(preg_replace('#/+#', '/', $path), '/');
+	}
+
+
 	/**
 	 * Login as user
 	 *
