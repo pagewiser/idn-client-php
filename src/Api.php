@@ -661,7 +661,7 @@ class Api
 
 	public function image($path, $fileName, $size = 'full', $transformation = self::FIT)
 	{
-		return $this->imageUrl . '/' . $this->client . '/' . $size . $transformation . '/' . $path . '/' . $fileName;
+		return $this->imageUrl . $this->cleanPathString('/' . $this->client . '/' . $size . $transformation . '/' . $path . '/' . $fileName);
 	}
 
 
