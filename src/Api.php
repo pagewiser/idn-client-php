@@ -151,12 +151,17 @@ class Api
 	 *
 	 * @return NULL
 	 */
-	public function loginUser($username, $password)
+	public function loginUser($username, $password, $lazy = FALSE)
 	{
 		$this->username = $username;
 		$this->password = $password;
 
 		$this->token = NULL;
+
+		if ($lazy === FALSE)
+		{
+			return $this->authenticate();
+		}
 	}
 
 
