@@ -208,6 +208,10 @@ class Api
 
 	private function throwGenericResponseError($response)
 	{
+		if (array_key_exists('code', $response) && $response['code'] == 403)
+		{
+			throw new InvalidTokenException($response['message'], 403);
+		}
 		if (!empty($result['error']))
 		{
 			throw new OperationFailException($result['error']);
