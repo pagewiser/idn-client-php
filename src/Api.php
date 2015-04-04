@@ -111,6 +111,18 @@ class Api
 	private $maxUploadSize;
 
 
+	public function getToken()
+	{
+		return $this->token;
+	}
+
+
+	public function setToken($token)
+	{
+		$this->token = $token;
+	}
+
+
 	/**
 	 * Prepare the client API
 	 *
