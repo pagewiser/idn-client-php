@@ -170,7 +170,7 @@ class Api
 	{
 		if (strpos($name, 'on') === 0)
 		{
-			if (is_array($this->$name) || $_this->$name instanceof \Traversable)
+			if (is_array($this->$name) || $this->$name instanceof \Traversable)
 			{
 				foreach ($this->$name as $handler)
 				{
