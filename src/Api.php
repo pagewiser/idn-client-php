@@ -678,3 +678,6 @@ class FileException extends OperationException {}
 class FileNotFoundException extends FileException {}
 
 class FileTooLargeException extends FileException {}
+
+class InvalidTokenException extends OperationException {}
+
