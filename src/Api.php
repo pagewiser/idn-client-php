@@ -563,6 +563,23 @@ class Api
 	}
 
 
+	public function findDuplicate($file)
+	{
+		$result = $this->callApi(
+			'file/search',
+			'POST',
+			array('sha1' => sha1_file($file), 'filesize' => filesize($file))
+		);
+
+		if ($result['status'] != 'success')
+		{
+			$this->throwGenericResponseError($result);
+		}
+
+		return $result;
+	}
+
+
 	public function createDirectory($directory)
 	{
 		$result = $this->callApi(
