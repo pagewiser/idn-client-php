@@ -600,12 +600,12 @@ class Api
 	}
 
 
-	public function listDirectory($directory)
+	public function listDirectory($directory, $page = 1, $paging = 100)
 	{
 		$result = $this->callApi(
 			'directory/list',
 			'POST',
-			array('directory' => $directory)
+			array('directory' => $directory, 'page' => $page, 'paging' => $paging)
 		);
 
 		if ($result['status'] != 'success')
