@@ -220,9 +220,9 @@ class Api
 			$this->onInvalidToken();
 			throw new InvalidTokenException($response['message'], 403);
 		}
-		if (!empty($result['error']))
+		if (!empty($response['error']))
 		{
-			throw new OperationFailException($result['error']);
+			throw new OperationFailException($response['error']);
 		}
 
 		throw new OperationFailException('Unknown error');
