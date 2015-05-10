@@ -106,6 +106,8 @@ class Api
 
 	public $onCurlFailed = array();
 
+	public $onInvalidToken = array();
+
 	private $lastErrorCode;
 
 	private $maxUploadSize;
@@ -215,11 +217,12 @@ class Api
 	{
 		if (array_key_exists('code', $response) && $response['code'] == 403)
 		{
+			$this->onInvalidToken();
 			throw new InvalidTokenException($response['message'], 403);
 		}
-		if (!empty($response['error']))
+		if (!empty($result['error']))
 		{
-			throw new OperationFailException($response['error']);
+			throw new OperationFailException($result['error']);
 		}
 
 		throw new OperationFailException('Unknown error');
@@ -697,4 +700,3 @@ class FileNotFoundException extends FileException {}
 class FileTooLargeException extends FileException {}
 
 class InvalidTokenException extends OperationException {}
-
