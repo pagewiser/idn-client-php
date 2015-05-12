@@ -634,6 +634,23 @@ class Api
 	}
 
 
+	public function deleteDirectory($directory)
+	{
+		$result = $this->callApi(
+			'directory/delete',
+			'POST',
+			array('directory' => $directory ?: '/')
+		);
+
+		if ($result['status'] != 'success')
+		{
+			$this->throwGenericResponseError($result);
+		}
+
+		return $result;
+	}
+
+
 	public function getMaxUploadSize()
 	{
 		if ($this->maxUploadSize)
