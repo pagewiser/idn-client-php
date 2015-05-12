@@ -462,7 +462,7 @@ class Api
 		$result = $this->callApi(
 			'file/upload-url',
 			'POST',
-			array('directory' => $directory, 'file' => $fileName, 'url' => $fileUrl)
+			array('directory' => $directory ?: '/', 'file' => $fileName, 'url' => $fileUrl)
 		);
 
 		if ($result['status'] != 'success')
@@ -493,7 +493,7 @@ class Api
 			$result = $this->callApi(
 				'file/upload-archive',
 				'POST',
-				array('directory' => $directory, 'content' => $this->getCurlFile($file))
+				array('directory' => $directory ?: '/', 'content' => $this->getCurlFile($file))
 			);
 		}
 		catch (InvalidResponseException $ex)
@@ -520,7 +520,7 @@ class Api
 		$result = $this->callApi(
 			'file/upload-url-archive',
 			'POST',
-			array('directory' => $directory, 'url' => $url)
+			array('directory' => $directory ?: '/', 'url' => $url)
 		);
 
 		if ($result['status'] != 'success')
@@ -537,7 +537,7 @@ class Api
 		$result = $this->callApi(
 			'file/upload',
 			'POST',
-			array('directory' => $directory, 'file' => $fileName, 'content' => $this->getCurlFile($file))
+			array('directory' => $directory ?: '/', 'file' => $fileName, 'content' => $this->getCurlFile($file))
 		);
 
 		if ($result['status'] != 'success')
@@ -554,7 +554,7 @@ class Api
 		$result = $this->callApi(
 			'file/delete',
 			'DELETE',
-			array('directory' => $directory, 'file' => $fileName)
+			array('directory' => $directory ?: '/', 'file' => $fileName)
 		);
 
 		if ($result['status'] != 'success')
@@ -588,7 +588,7 @@ class Api
 		$result = $this->callApi(
 			'directory/create',
 			'POST',
-			array('directory' => $directory)
+			array('directory' => $directory ?: '/')
 		);
 
 		if ($result['status'] != 'success')
@@ -605,7 +605,7 @@ class Api
 		$result = $this->callApi(
 			'directory/list',
 			'POST',
-			array('directory' => $directory, 'page' => $page, 'paging' => $paging)
+			array('directory' => $directory ?: '/', 'page' => $page, 'paging' => $paging)
 		);
 
 		if ($result['status'] != 'success')
@@ -622,7 +622,7 @@ class Api
 		$result = $this->callApi(
 			is_null($settings) ? 'directory/settings' : 'directory/set-settings',
 			'POST',
-			array('directory' => $directory, 'settings' => $settings)
+			array('directory' => $directory ?: '/', 'settings' => $settings)
 		);
 
 		if ($result['status'] != 'success')
