@@ -658,6 +658,74 @@ class Api
 	}
 
 
+	public function myApplications()
+	{
+		$result = $this->callApi(
+			'application/my',
+			'POST',
+			array()
+		);
+
+		if ($result['status'] != 'success')
+		{
+			$this->throwGenericResponseError($result);
+		}
+
+		return $result;
+	}
+
+
+	public function createApplication($id, $name)
+	{
+		$result = $this->callApi(
+			'application/create',
+			'POST',
+			array('id' => $id, 'name' => $name)
+		);
+
+		if ($result['status'] != 'success')
+		{
+			$this->throwGenericResponseError($result);
+		}
+
+		return $result;
+	}
+
+
+	public function getApplication($id)
+	{
+		$result = $this->callApi(
+			'application/get',
+			'POST',
+			array('id' => $id)
+		);
+
+		if ($result['status'] != 'success')
+		{
+			$this->throwGenericResponseError($result);
+		}
+
+		return $result;
+	}
+
+
+	public function allowApplicationClient($id, $client)
+	{
+		$result = $this->callApi(
+			'application/allow-client',
+			'POST',
+			array('application_id' => $id, 'client_id' => $client)
+		);
+
+		if ($result['status'] != 'success')
+		{
+			$this->throwGenericResponseError($result);
+		}
+
+		return $result;
+	}
+
+
 	public function getMaxUploadSize()
 	{
 		if ($this->maxUploadSize)
