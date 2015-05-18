@@ -108,6 +108,8 @@ class Api
 
 	public $onInvalidToken = array();
 
+	public $onInvalidClient = array();
+
 	private $lastErrorCode;
 
 	private $maxUploadSize;
@@ -219,6 +221,11 @@ class Api
 		{
 			$this->onInvalidToken();
 			throw new InvalidTokenException($response['message'], 403);
+		}
+		if (array_key_exists('code', $response) && $response['code'] == 402)
+		{
+			$this->onInvalidClient();
+			throw new InvalidTokenException($response['message'], 402);
 		}
 		if (!empty($response['error']))
 		{
