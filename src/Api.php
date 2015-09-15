@@ -114,6 +114,8 @@ class Api
 
 	private $maxUploadSize;
 
+	private $dirAliases;
+
 
 	public function getToken()
 	{
@@ -124,6 +126,28 @@ class Api
 	public function setToken($token)
 	{
 		$this->token = $token;
+	}
+
+
+	public function setDirAliases(array $aliases = NULL)
+	{
+		$this->dirAliases = $aliases;
+	}
+
+
+	public function getDirAliases()
+	{
+		return $this->dirAliases;
+	}
+
+
+	public function getDirAlias($value)
+	{
+		if (!array_key_exists($value, $this->dirAliases))
+		{
+			throw new AliasNotDefined('Directory alias "'. $value .'" not defined.', 120);
+		}
+		return $this->dirAliases[$value];
 	}
 
 
@@ -469,7 +493,7 @@ class Api
 		$result = $this->callApi(
 			'file/upload-url',
 			'POST',
-			array('directory' => $directory ?: '/', 'file' => $fileName, 'url' => $fileUrl)
+			array('directory' => $this->normalizeDirectory($directory) ?: '/', 'file' => $fileName, 'url' => $fileUrl)
 		);
 
 		if ($result['status'] != 'success')
@@ -500,7 +524,7 @@ class Api
 			$result = $this->callApi(
 				'file/upload-archive',
 				'POST',
-				array('directory' => $directory ?: '/', 'content' => $this->getCurlFile($file))
+				array('directory' => $this->normalizeDirectory($directory) ?: '/', 'content' => $this->getCurlFile($file))
 			);
 		}
 		catch (InvalidResponseException $ex)
@@ -527,7 +551,7 @@ class Api
 		$result = $this->callApi(
 			'file/upload-url-archive',
 			'POST',
-			array('directory' => $directory ?: '/', 'url' => $url)
+			array('directory' => $this->normalizeDirectory($directory) ?: '/', 'url' => $url)
 		);
 
 		if ($result['status'] != 'success')
@@ -544,7 +568,7 @@ class Api
 		$result = $this->callApi(
 			'file/upload',
 			'POST',
-			array('directory' => $directory ?: '/', 'file' => $fileName, 'content' => $this->getCurlFile($file))
+			array('directory' => $this->normalizeDirectory($directory) ?: '/', 'file' => $fileName, 'content' => $this->getCurlFile($file))
 		);
 
 		if ($result['status'] != 'success')
@@ -561,7 +585,7 @@ class Api
 		$result = $this->callApi(
 			'file/delete',
 			'DELETE',
-			array('directory' => $directory ?: '/', 'file' => $fileName)
+			array('directory' => $this->normalizeDirectory($directory) ?: '/', 'file' => $fileName)
 		);
 
 		if ($result['status'] != 'success')
@@ -595,7 +619,7 @@ class Api
 		$result = $this->callApi(
 			'directory/create',
 			'POST',
-			array('directory' => $directory ?: '/')
+			array('directory' => $this->normalizeDirectory($directory) ?: '/')
 		);
 
 		if ($result['status'] != 'success')
@@ -612,7 +636,7 @@ class Api
 		$result = $this->callApi(
 			'directory/list',
 			'POST',
-			array('directory' => $directory ?: '/', 'page' => $page, 'paging' => $paging)
+			array('directory' => $this->normalizeDirectory($directory) ?: '/', 'page' => $page, 'paging' => $paging)
 		);
 
 		if ($result['status'] != 'success')
@@ -629,7 +653,7 @@ class Api
 		$result = $this->callApi(
 			is_null($settings) ? 'directory/settings' : 'directory/set-settings',
 			'POST',
-			array('directory' => $directory ?: '/', 'settings' => $settings)
+			array('directory' => $this->normalizeDirectory($directory) ?: '/', 'settings' => $settings)
 		);
 
 		if ($result['status'] != 'success')
@@ -646,7 +670,7 @@ class Api
 		$result = $this->callApi(
 			'directory/delete',
 			'POST',
-			array('directory' => $directory ?: '/')
+			array('directory' => $this->normalizeDirectory($directory) ?: '/')
 		);
 
 		if ($result['status'] != 'success')
@@ -773,15 +797,30 @@ class Api
 
 	public function image($path, $fileName, $size = 'full', $transformation = self::FIT)
 	{
-		return $this->imageUrl . $this->cleanPathString('/' . $this->client . '/' . $size . $transformation . '/' . $path . '/' . $fileName);
+		return $this->imageUrl . $this->cleanPathString('/' . $this->client . '/' . $size . $transformation . '/' . $this->normalizeDirectory($path) . '/' . $fileName);
+	}
+
+
+	public function normalizeDirectory($dir)
+	{
+		if (strpos($dir, '@') === 0)
+		{
+			return $this->getDirAlias(substr($dir, 1));
+		}
+
+		return $dir;
 	}
 
 
 }
 
-class InvalidResponseException extends \Exception {}
+class IdnException extends \Exception {}
 
-class OperationException extends \Exception {}
+class InvalidResponseException extends IdnException {}
+
+class OperationException extends IdnException {}
+
+class InvalidStateException extends IdnException {}
 
 class OperationFailException extends OperationException {}
 
@@ -792,3 +831,5 @@ class FileNotFoundException extends FileException {}
 class FileTooLargeException extends FileException {}
 
 class InvalidTokenException extends OperationException {}
+
+class AliasNotDefined extends InvalidStateException {}
